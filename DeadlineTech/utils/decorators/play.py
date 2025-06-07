@@ -197,7 +197,7 @@ def PlayWrapper(command):
             logger.exception(f"Unhandled exception in PlayWrapper: {ex}")
             try:
                 await message.reply_text(
-                    f"🚫 <b>Unexpected Error:</b>\n<code>{str(ex)}</code>",
+                    f"🚫 <b>Unexpected Error:</b>\n<pre>{str(ex)}</pre>",
                     disable_web_page_preview=True,
                 )
             except:
