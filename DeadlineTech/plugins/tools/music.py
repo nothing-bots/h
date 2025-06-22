@@ -217,7 +217,7 @@ async def send_audio_by_video_id(client: Client, message: Message, video_id: str
                 title=title,
                 performer="DeadlineTech",
                 duration=duration,
-                caption=f"🎼 <b>{title}</b>\n🕒 Duration: {duration_str}\n📱 Source: <a href=\"{video_url}\">YouTube</a>\n🔊 Delivered by: <a href=\"https://t.me/DeadlineTechTeam\">DeadlineTech Music Bot</a>",
+                caption=f"🎼 <b>{title}</b>\n🕒 Duration: {duration_str}\n📱 Source: <a href=\"{video_url}\">YouTube</a>\n🔊 Delivered by: <a href=\"https://t.me/DeadlineTechTeam\">DeadlineTech</a>",
                 thumb=thumb_path if thumb_path else None
             ) 
             mark_song_as_sent(video_id, sent.audio.file_id)
