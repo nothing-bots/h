@@ -14,7 +14,7 @@ API_HASH = getenv("API_HASH")
 BOT_TOKEN = getenv("BOT_TOKEN")
 
 #Get API_KEY from @DeadlineTechOwner or @DeadlineApiBot
-API_BASE_URL = getenv("API_BASE_URL", "https://deadlineTech.site")
+API_URL = getenv("API_URL", "https://deadlineTech.site")
 API_KEY = getenv("API_KEY")
 
 # Get your mongo url from cloud.mongodb.com
@@ -86,6 +86,14 @@ votemode = {}
 autoclean = []
 confirmer = {}
 
+
+RequestApi = 0
+downloadedApi = 0
+failedApi = 0
+failedApiLinkExtract = 0
+ReqYt = 0
+DlYt = 0
+FailedYt = 0
 
 START_IMG_URL = getenv(
     "START_IMG_URL", "https://telegra.ph/file/1557a544d9b4f051f99c7-57891fa1d7578f5b79.jpg"
