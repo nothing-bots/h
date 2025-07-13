@@ -61,7 +61,7 @@ def download_thumbnail(video_id: str) -> str | None:
 
 # 🔽 Download audio using external API
 def api_dl(video_id: str) -> str | None:
-    api_url = f"{API_BASE_URL}/download/song/{video_id}?key={API_KEY}"
+    api_url = f"{API_URL}/download/song/{video_id}?key={API_KEY}"
     os.makedirs(DOWNLOADS_DIR, exist_ok=True)
     file_path = os.path.join(DOWNLOADS_DIR, f"{video_id}.mp3")
     if os.path.exists(file_path):
