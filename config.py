@@ -14,7 +14,7 @@ API_HASH = getenv("API_HASH")
 BOT_TOKEN = getenv("BOT_TOKEN")
 
 #Get API_KEY from @DeadlineTechOwner or @DeadlineApiBot
-API_URL = getenv("API_URL", "https://deadlineTech.site")
+API_URL = getenv("API_URL", "http://206.189.8.205:5000")
 API_KEY = getenv("API_KEY")
 
 # Get your mongo url from cloud.mongodb.com
@@ -42,7 +42,7 @@ HEROKU_API_KEY = getenv("HEROKU_API_KEY")
 
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
-    "https://github.com/DeadlineTech/music",
+    "https://github.com/music-miko/song",
 )
 UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "master")
 GIT_TOKEN = getenv(
@@ -86,6 +86,22 @@ votemode = {}
 autoclean = []
 confirmer = {}
 
+#Youtube Api
+songvideo_requests = 0
+songvideo_success = 0
+songvideo_failed = 0
+
+songaudio_requests = 0
+songaudio_success = 0
+songaudio_failed = 0
+
+video_requests = 0
+video_success = 0
+video_failed = 0
+
+audio_requests = 0
+audio_success = 0
+audio_failed = 0
 
 RequestApi = 0
 downloadedApi = 0
@@ -96,18 +112,18 @@ DlYt = 0
 FailedYt = 0
 
 START_IMG_URL = getenv(
-    "START_IMG_URL", "https://telegra.ph/file/1557a544d9b4f051f99c7-57891fa1d7578f5b79.jpg"
+    "START_IMG_URL", "https://files.catbox.moe/pjwlqg.jpg"
 )
 PING_IMG_URL = getenv(
-    "PING_IMG_URL", "https://telegra.ph/file/9f9bde8939034b95f3e59-a0d7a8216c1faccd19.jpg"
+    "PING_IMG_URL", "https://files.catbox.moe/ou29gb.jpg"
 )
-PLAYLIST_IMG_URL = "https://telegra.ph/file/1927a41b14896327ca2ea-662f7988e42d3d7ec5.jpg"
-STATS_IMG_URL = "https://telegra.ph/file/1557a544d9b4f051f99c7-57891fa1d7578f5b79.jpg"
-TELEGRAM_AUDIO_URL = "https://files.catbox.moe/1xn73k.jpg"
+PLAYLIST_IMG_URL = "https://files.catbox.moe/tny9ug.jpg"
+STATS_IMG_URL = "https://files.catbox.moe/k3e3bg.jpg"
+TELEGRAM_AUDIO_URL = "https://files.catbox.moe/nknnw1.jpg"
 TELEGRAM_VIDEO_URL = "https://files.catbox.moe/1xn73k.jpg"
-STREAM_IMG_URL = "https://envs.sh/SnH.jpg"
+STREAM_IMG_URL = "https://files.catbox.moe/tny9ug.jpg"
 SOUNCLOUD_IMG_URL = "https://files.catbox.moe/1xn73k.jpg"
-YOUTUBE_IMG_URL = "https://files.catbox.moe/1xn73k.jpg"
+YOUTUBE_IMG_URL = "https://files.catbox.moe/fpknxj.jpg"
 SPOTIFY_ARTIST_IMG_URL = "https://files.catbox.moe/1xn73k.jpg"
 SPOTIFY_ALBUM_IMG_URL = "https://files.catbox.moe/1xn73k.jpg"
 SPOTIFY_PLAYLIST_IMG_URL = "https://files.catbox.moe/1xn73k.jpg"
@@ -131,4 +147,4 @@ if SUPPORT_CHAT:
     if not re.match("(?:http|https)://", SUPPORT_CHAT):
         raise SystemExit(
             "[ERROR] - Your SUPPORT_CHAT url is wrong. Please ensure that it starts with https://"
-        )
+)
