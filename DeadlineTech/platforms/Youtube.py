@@ -6,29 +6,30 @@ import glob
 import random
 import logging
 import aiohttp
+import time
 import aiofiles
+import aiofiles.os as aioos
 import config
 import requests
 import yt_dlp
 from typing import Union
 from aiocache import cached, Cache
 from pyrogram.types import Message
-from config import API_URL, API_KEY
 from pyrogram.enums import MessageEntityType
 from DeadlineTech.utils.database import is_on_off
 from youtubesearchpython.__future__ import VideosSearch
 from DeadlineTech.utils.formatters import time_to_seconds
 
+
+RETRIES = 3
+MAX_TOTAL_TIME = 14  # seconds
+
+
 # ----- logger setup (minimal) -----
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 # ----------------------------------
-BackupUrlDomain = "http://188.166.81.138:5000"
-RETRY_API_MODE        = True
-MAX_API_FAILED_RETRY  = 3
-API_URL_2 = "http://64.227.79.220:8080"
 
-MIN_FILE_SIZE_BYTES = 10 * 1024  # 0.01 MB = 10 KB
 
 def cookie_txt_file():
     cookie_dir = f"{os.getcwd()}/cookies"
@@ -37,220 +38,38 @@ def cookie_txt_file():
     cookie_file = os.path.join(cookie_dir, random.choice(cookies_files))
     return cookie_file
 
-
-@cached(ttl=60000, cache=Cache.MEMORY)  # Cache for 1000 minutes (60000 seconds)
-async def check_local_file(video_id: str):
-    download_folder = "downloads"
-    for ext in ["mp3", "m4a", "webm", "opus"]:
-        file_path = os.path.join(download_folder, f"{video_id}.{ext}")
-        if os.path.exists(file_path):  # lightweight sync check, usually okay
-            return file_path
-    return None
-
-async def download_file_with_cleanup(session, download_url, final_path, timeout_seconds=None):
-    temp_path = final_path + ".part"
-
+async def fetch_stream_url(link: str) -> str | None:
     try:
-        file_response = None
-        try:
-            if timeout_seconds:
-                file_response = await asyncio.wait_for(session.get(download_url), timeout=timeout_seconds)
-            else:
-                file_response = await session.get(download_url)
-        except asyncio.TimeoutError:
-            logger.warning(f"⏱️ Timed out waiting for server response after {timeout_seconds}s")
-            if await aiofiles.os.path.exists(temp_path):
-                await aiofiles.os.remove(temp_path)
-            return None
-
-        if file_response.status != 200:
-            logger.error(f"Failed to start download, status: {file_response.status}")
-            return None
-
-        async with aiofiles.open(temp_path, 'wb') as f:
-            while True:
-                chunk = await file_response.content.read(8192)
-                if not chunk:
-                    break
-                await f.write(chunk)
-
-        size = os.path.getsize(temp_path)
-        if size < MIN_FILE_SIZE_BYTES:
-            logger.warning(f"File too small ({size} bytes), deleting.")
-            await aiofiles.os.remove(temp_path)
-            return None
-
-        os.rename(temp_path, final_path)
-        return final_path
-
+        video_id = link.split("v=")[-1].split("&")[0]
     except Exception as e:
-        logger.error(f"Download error: {e}")
-        if await aiofiles.os.path.exists(temp_path):
-            await aiofiles.os.remove(temp_path)
+        print(f"❌ Could not extract video ID: {e}")
         return None
-
-
-async def check_external_sourceytbackup(video_id: str, key: str) -> str | None:
-    ext_url = f"{BackupUrlDomain}/backupyt/{video_id}?key={key}"
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(ext_url, timeout=4) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if data.get("status") == "done" and data.get("download_url"):
-                        return data["download_url"]
-    except Exception as e:
-        print(f"[INFO] External check failed for {video_id}: {e}")
+    url = f"{config.API_URL}/get/stream/{video_id}?key={config.API_KEY}"
+    print(url)
+    timeout = aiohttp.ClientTimeout(total=7)
+    start_time = time.monotonic()
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for attempt in range(1, RETRIES + 1):
+            elapsed = time.monotonic() - start_time
+            if elapsed >= MAX_TOTAL_TIME:
+                print("⏱️ Max total retry time exceeded. No more retries.")
+                break
+            try:
+                print(f"🔄 Attempt {attempt}...")
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        stream_url = data.get("stream_url")
+                        print(f"✅ Stream URL found: {stream_url}")
+                        return stream_url
+                    else:
+                        print(f"❌ API error: {response.status}")
+            except asyncio.TimeoutError:
+                print("⏱️ Request timed out.")
+            except Exception as e:
+                print(f"⚠️ Request failed: {e}")
+            await asyncio.sleep(0.5)
     return None
-
-async def check_external_backups(video_id: str, key: str) -> str | None:
-    ext_url = f"{API_URL_2}/backupyt/{video_id}?key={key}"
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(ext_url, timeout=4) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if data.get("status") == "done" and data.get("download_url"):
-                        return data["download_url"]
-    except Exception as e:
-        print(f"[INFO] External check failed for {video_id}: {e}")
-    return None
-
-# ─── minimal logger setup ───────────────────────────────────────────────────────
-import logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-logger = logging.getLogger(__name__)
-# ────────────────────────────────────────────────────────────────────────────────
-
-async def download_song(
-    link: str,
-    *,
-    direct_download: bool = False,
-    pre_fetched_url: str | None = None,
-) -> str | None:
-
-    logger.info(f"Downloading from link: {link}")
-    video_id = link.split("v=")[-1].split("&")[0]
-
-    # Fire-and-forget backup prewarm
-    asyncio.create_task(check_external_sourceytbackup(video_id, config.API_KEY))
-
-    config.RequestApi += 1
-
-    # ✅ Already downloaded?
-    local = await check_local_file(video_id)
-    if local:
-        config.downloadedApi += 1
-        logger.info("File already exists locally: %s", local)
-        return local
-
-    download_url: str | None = None
-    file_format = "webm"
-
-    async with aiohttp.ClientSession() as session:
-
-        # 🔹 DIRECT DOWNLOAD MODE
-        if direct_download:
-            logger.info("Direct-download mode enabled")
-            pre_fetched_url = f"{API_URL_2}/download/song/{video_id}?key={API_KEY}"
-            download_url = (
-                pre_fetched_url
-                or await check_external_sourceytbackup(video_id, config.API_KEY)
-                or await check_external_backups(video_id, config.API_KEY)
-            )
-            if not download_url:
-                logger.error("Direct mode: unable to obtain download URL")
-                return None
-
-        # 🔹 NORMAL API POLLING MODE
-        else:
-            song_url = f"{API_URL}/song/{video_id}?key={API_KEY}"
-            failed_attempts = 0
-
-            for attempt in range(7):
-                try:
-                    async with session.get(song_url) as resp:
-                        try:
-                            data = await resp.json()
-                        except Exception:
-                            text = await resp.text()
-                            logger.warning("JSON parse failed: %s", text)
-                            return None
-
-                        if resp.status == 429:
-                            logger.error("API 429 Too Many Requests: %s", data.get("error", ""))
-                            return None
-                        if resp.status == 401:
-                            logger.error("API 401 Unauthorized: %s", data.get("error", ""))
-                            return None
-                        status = (data.get("status") or "").lower()
-
-                        if status == "done":
-                            download_url = data.get("download_url")
-                            file_format = data.get("format", "webm")
-                            if not download_url:
-                                logger.error("API returned 'done' but no download_url")
-                                return None
-                            config.downloadedApi += 1
-                            break
-
-                        elif status == "downloading":
-                            logger.info("[Attempt %d/7] API still processing...", attempt + 1)
-                            await asyncio.sleep(4)
-                            continue
-
-                        elif status == "failed":
-                            failed_attempts += 1
-                            logger.warning("API status 'failed' (count: %d)", failed_attempts)
-                            if RETRY_API_MODE and failed_attempts >= MAX_API_FAILED_RETRY:
-                                logger.error("API failed %d times – skipping early", failed_attempts)
-                                break
-                            await asyncio.sleep(3)
-                            continue
-
-                        else:
-                            err_msg = data.get("error") or data.get("message") or f"Unexpected status: {status}"
-                            logger.warning("Unexpected API response: %s", err_msg)
-                            return None
-
-                except Exception as e:
-                    logger.error("API polling exception: %s", e)
-                    return None
-
-            else:
-                # All retries exhausted
-                config.failedApiLinkExtract += 1
-                logger.info("API retry limit reached – trying backup sources")
-
-                download_url = await check_external_sourceytbackup(video_id, config.API_KEY) \
-                            or await check_external_backups(video_id, config.API_KEY)
-
-                if not download_url:
-                    logger.error("All backup sources failed")
-                    return None
-
-                config.downloadedApi += 1
-                logger.info("Download URL obtained from backup source")
-
-        # 🔽 Final step: download the file
-        final_path = os.path.join("downloads", f"{video_id}.{file_format}")
-        result_path = await download_file_with_cleanup(
-            session,
-            download_url,
-            final_path,
-            timeout_seconds=10  # Timeout for download start
-        )
-
-        if result_path is None:
-            config.failedApi += 1
-            return None
-
-        logger.info("Download completed: %s", result_path)
-        return result_path
-
-
-
-
 
 
 async def check_file_size(link):
@@ -696,37 +515,25 @@ class YouTubeAPI:
                         direct = True
                         downloaded_file = await loop.run_in_executor(None, video_dl)
                 return downloaded_file, direct
-
             else:
-                # AUDIO MODE LOGIC (Updated)
-                config.audio_requests += 1
                 try:
-                    print("Trying download_song (API polling)…")
-                    downloaded_file = await download_song(link)
-                    if downloaded_file:
-                        config.audio_success += 1
-                        return downloaded_file, True
-
-                    print("download_song returned None. Trying audio_dl()…")
-                    downloaded_file = await loop.run_in_executor(None, audio_dl)
-                    if downloaded_file:
-                        config.audio_success += 1
-                        return downloaded_file, True
-
-                    print("audio_dl() failed. Trying download_song(direct_download=True)…")
-                    downloaded_file = await download_song(link, direct_download=True)
-                    if downloaded_file:
-                        config.audio_success += 1
-                        return downloaded_file, True
-
-                    print("All audio download methods failed.")
-                    config.audio_failed += 1
-                    return None, True
-
+                    config.audio_requests += 1
+                    downloaded_file = await fetch_stream_url(link)
+                    print(f"first attempt {downloaded_file}✨")
+                    if downloaded_file is None:
+                        print("download_song audio download returned None, falling back")
+                        downloaded_file = await loop.run_in_executor(None, audio_dl)  # Changed from self.loop to loop
+                        if downloaded_file:
+                            config.audio_success += 1
                 except Exception as e:
-                    print(f"Exception in audio path: {e}")
+                    print("download_song audio download returned None, falling back")
+                    downloaded_file = await loop.run_in_executor(None, audio_dl)  # Changed from self.loop to loop
+                    if downloaded_file:
+                        config.audio_success += 1
                     config.audio_failed += 1
-                    return None, True
+                direct = True
+                config.audio_success += 1
+                return downloaded_file, direct
 
         except Exception as e:
             print(f"Unhandled error during download: {e}")
