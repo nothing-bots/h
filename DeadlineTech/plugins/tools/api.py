@@ -1,9 +1,20 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-import config
+import datetime
+
 from DeadlineTech import app
 from DeadlineTech.misc import SUDOERS
-import datetime
+import config
+from DeadlineTech.platform.Youtube import (
+    ReqGetStream,
+    SuccessGetStream,
+    FailedGetStream,
+    TimeOutStream,
+    ReqGetVideoStream,
+    SuccessGetVideoStream,
+    FailedGetVideoStream,
+    TimeOutVideoStream,
+)
 
 
 def get_stats_message_html():
@@ -22,10 +33,21 @@ def get_stats_message_html():
     msg += f"  ├─ Success  : <code>{config.audio_success}</code>\n"
     msg += f"  └─ Failed   : <code>{config.audio_failed}</code>\n\n"
 
+    msg += "🎥 <b>Stream Stats</b>\n"
+    msg += f"  ├─ Requested: <code>{ReqGetStream}</code>\n"
+    msg += f"  ├─ Success  : <code>{SuccessGetStream}</code>\n"
+    msg += f"  ├─ Failed   : <code>{FailedGetStream}</code>\n"
+    msg += f"  └─ Timeout  : <code>{TimeOutStream}</code>\n\n"
+
+    msg += "🔗 <b>Video URL Stream Stats</b>\n"
+    msg += f"  ├─ Requested: <code>{ReqGetVideoStream}</code>\n"
+    msg += f"  ├─ Success  : <code>{SuccessGetVideoStream}</code>\n"
+    msg += f"  ├─ Failed   : <code>{FailedGetVideoStream}</code>\n"
+    msg += f"  └─ Timeout  : <code>{TimeOutVideoStream}</code>\n"
+
     return msg
 
 
-# Pyrogram command handler for /stats
 @app.on_message(filters.command("yt") & SUDOERS)
 async def stats_handler(client: Client, message: Message):
     html = get_stats_message_html()
