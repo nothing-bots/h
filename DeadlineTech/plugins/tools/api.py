@@ -12,16 +12,6 @@ def get_stats_message_html():
     msg = f"📊 <b>Download Stats Summary</b>\n"
     msg += f"<i>As of {now}</i>\n\n"
 
-    msg += "🎵 <b>Song Audio</b>\n"
-    msg += f"  ├─ Requested: <code>{config.songaudio_requests}</code>\n"
-    msg += f"  ├─ Success  : <code>{config.songaudio_success}</code>\n"
-    msg += f"  └─ Failed   : <code>{config.songaudio_failed}</code>\n\n"
-
-    msg += "📼 <b>Song Video</b>\n"
-    msg += f"  ├─ Requested: <code>{config.songvideo_requests}</code>\n"
-    msg += f"  ├─ Success  : <code>{config.songvideo_success}</code>\n"
-    msg += f"  └─ Failed   : <code>{config.songvideo_failed}</code>\n\n"
-
     msg += "📺 <b>Video</b>\n"
     msg += f"  ├─ Requested: <code>{config.video_requests}</code>\n"
     msg += f"  ├─ Success  : <code>{config.video_success}</code>\n"
