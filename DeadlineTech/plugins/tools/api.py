@@ -5,7 +5,7 @@ import datetime
 from DeadlineTech import app
 from DeadlineTech.misc import SUDOERS
 import config
-from DeadlineTech.platform.Youtube import (
+from DeadlineTech.platforms.Youtube import (
     ReqGetStream,
     SuccessGetStream,
     FailedGetStream,
