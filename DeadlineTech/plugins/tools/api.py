@@ -1,22 +1,12 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-import datetime
-
 from DeadlineTech import app
 from DeadlineTech.misc import SUDOERS
+from DeadlineTech.platforms.Youtube import get_stream_stats
 import config
-from DeadlineTech.platforms.Youtube import (
-    ReqGetStream,
-    SuccessGetStream,
-    FailedGetStream,
-    TimeOutStream,
-    ReqGetVideoStream,
-    SuccessGetVideoStream,
-    FailedGetVideoStream,
-    TimeOutVideoStream,
-)
+import datetime
 
-
+# 📊 Function for download summary
 def get_stats_message_html():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -33,22 +23,15 @@ def get_stats_message_html():
     msg += f"  ├─ Success  : <code>{config.audio_success}</code>\n"
     msg += f"  └─ Failed   : <code>{config.audio_failed}</code>\n\n"
 
-    msg += "🎥 <b>Stream Stats</b>\n"
-    msg += f"  ├─ Requested: <code>{ReqGetStream}</code>\n"
-    msg += f"  ├─ Success  : <code>{SuccessGetStream}</code>\n"
-    msg += f"  ├─ Failed   : <code>{FailedGetStream}</code>\n"
-    msg += f"  └─ Timeout  : <code>{TimeOutStream}</code>\n\n"
-
-    msg += "🔗 <b>Video URL Stream Stats</b>\n"
-    msg += f"  ├─ Requested: <code>{ReqGetVideoStream}</code>\n"
-    msg += f"  ├─ Success  : <code>{SuccessGetVideoStream}</code>\n"
-    msg += f"  ├─ Failed   : <code>{FailedGetVideoStream}</code>\n"
-    msg += f"  └─ Timeout  : <code>{TimeOutVideoStream}</code>\n"
-
     return msg
 
-
+# 📥 Pyrogram command handler
 @app.on_message(filters.command("yt") & SUDOERS)
-async def stats_handler(client: Client, message: Message):
-    html = get_stats_message_html()
-    await message.reply_text(html)
+async def yt_stats_handler(client: Client, message: Message):
+    html_summary = get_stats_message_html()
+    stream_summary = get_stream_stats()
+
+    await message.reply_text(
+        f"{html_summary}\n<code>{stream_summary}</code>",
+        disable_web_page_preview=True
+    )
