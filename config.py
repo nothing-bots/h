@@ -14,9 +14,8 @@ API_HASH = getenv("API_HASH")
 BOT_TOKEN = getenv("BOT_TOKEN")
 
 #Get API_KEY from @DeadlineTechOwner or @DeadlineApiBot
-API_URL = getenv("API_URL", "http://deadlineTech.site")
+API_URL = getenv("API_URL", "http://64.227.79.220:5055")
 API_KEY = getenv("API_KEY")
-API_BASE_URL = getenv("API_BASE_URL", "http://deadlineTech.site")
 
 # Get your mongo url from cloud.mongodb.com
 MONGO_DB_URI = getenv("MONGO_DB_URI", None)
@@ -33,7 +32,7 @@ LOGGER_ID = int(getenv("LOGGER_ID", None))
 SAVE_CHANNEL_ID = int(getenv("SAVE_CHANNEL_ID", "-1002829671432"))
 
 # Get this value from @Harry_RoxBot on Telegram by /id
-OWNER_ID = int(getenv("OWNER_ID", 6848223695))
+OWNER_ID = int(getenv("OWNER_ID", 7321657753))
 
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
@@ -50,10 +49,9 @@ GIT_TOKEN = getenv(
     "GIT_TOKEN", None
 )  # Fill this variable if your upstream repository is private
 
-SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/DeadlineTechTeam")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/DeadlineTechsupport")
-SUPPORT_GROUP = getenv("SUPPORT_GROUP", "https://t.me/DeadlineTechsupport")
-
+SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/hogwarts_updates")
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/HarryPotterSupport")
+SUPPORT_GROUP = getenv("SUPPORT_GROUP", "https://t.me/HarryPotterSupport")
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", True))
