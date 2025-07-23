@@ -9,7 +9,6 @@ import datetime
 # 📥 Pyrogram command handler
 @app.on_message(filters.command("yt") & SUDOERS)
 async def yt_stats_handler(client: Client, message: Message):
-    html_summary = get_stats_message_html()
     stream_summary = get_stream_stats()
 
     await message.reply_text(
