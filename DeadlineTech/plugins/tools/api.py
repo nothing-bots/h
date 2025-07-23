@@ -1,3 +1,4 @@
+"""
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from DeadlineTech import app
@@ -35,3 +36,4 @@ async def yt_stats_handler(client: Client, message: Message):
         f"{html_summary}\n<code>{stream_summary}</code>",
         disable_web_page_preview=True
     )
+"""
