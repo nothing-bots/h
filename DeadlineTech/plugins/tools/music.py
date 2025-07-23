@@ -31,7 +31,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 MIN_FILE_SIZE = 51200
-API_BASE_URL = "https://deadlineTech.site"
+API_URL = "https://deadlineTech.site"
 DOWNLOADS_DIR = "downloads"
 
 # 🔽 Extract video ID from various YouTube link formats
